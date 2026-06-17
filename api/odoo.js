@@ -30,7 +30,6 @@ async function validateGroup(uid, groupId) {
     });
     await new Promise(r => setTimeout(r, 1000));
   }
-  // Segunda pasada para entregas generadas al validar OUT
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
     await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
@@ -52,24 +51,24 @@ module.exports = async (req, res) => {
     const body = req.body || {};
     const { action } = body;
 
-    // ── LIST: solo 3 llamadas a Odoo ──────────────────────────────────────
     if (req.method === 'GET' || action === 'list') {
       const since = new Date();
       since.setDate(since.getDate() - 10);
       const sinceStr = since.toISOString().slice(0, 19).replace('T', ' ');
 
+      // Sin filtro de cliente — para ver qué devuelve
       const picks = await odoo(uid, 'stock.picking', 'search_read', [[
         ['picking_type_id.name', 'ilike', 'Pick'],
         ['state', '=', 'done'],
-        ['partner_id.name', 'in', CLIENTES],
         ['date_done', '>=', sinceStr]
-      ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 100 });
+      ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 20 });
 
-      if (!picks.length) return res.json({ picks: [] });
+      // DEBUG: devolver los nombres de partner para ver el formato exacto
+      if (!picks.length) return res.json({ picks: [], debug: 'No picks in last 10 days' });
+
+      const partnerNames = [...new Set(picks.map(p => p.partner_id ? p.partner_id[1] : 'sin contacto'))];
 
       const groupIds = [...new Set(picks.filter(p => p.group_id).map(p => p.group_id[0]))];
-      if (!groupIds.length) return res.json({ picks: [] });
-
       const allPending = await odoo(uid, 'stock.picking', 'search_read', [[
         ['group_id', 'in', groupIds],
         ['state', 'not in', ['done', 'cancel']],
@@ -88,10 +87,9 @@ module.exports = async (req, res) => {
         .filter(p => p.group_id && byGroup[p.group_id[0]]?.length)
         .map(p => ({ ...p, pending: byGroup[p.group_id[0]] }));
 
-      return res.json({ picks: result });
+      return res.json({ picks: result, debug_partners: partnerNames });
     }
 
-    // ── VALIDATE ONE ──────────────────────────────────────────────────────
     if (action === 'validate') {
       const { groupId } = body;
       if (!groupId) return res.status(400).json({ error: 'groupId requerido' });
@@ -99,7 +97,6 @@ module.exports = async (req, res) => {
       return res.json({ ok: true });
     }
 
-    // ── VALIDATE ALL ──────────────────────────────────────────────────────
     if (action === 'validateAll') {
       const { groupIds } = body;
       if (!groupIds?.length) return res.status(400).json({ error: 'groupIds requerido' });
