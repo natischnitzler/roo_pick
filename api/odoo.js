@@ -3,7 +3,7 @@ const ODOO_DB = process.env.ODOO_DB;
 const ODOO_USER = process.env.ODOO_USER;
 const ODOO_PASS = process.env.ODOO_PASS;
 
-const CLIENTES = ['INVERSIONES ROOBOSCH LIMITADA', 'DISTRIBUIDORA JMMA SPA'];
+const CLIENTE_IDS = [52021, 52128];
 
 function rpc(service, method, params) {
   return new Promise((resolve, reject) => {
@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
       const picks = await odoo(uid, 'stock.picking', 'search_read', [[
         ['picking_type_id.name', 'ilike', 'Pick'],
         ['state', '=', 'done'],
-        ['partner_id.name', 'in', CLIENTES],
+        ['partner_id', 'in', CLIENTE_IDS],
         ['date_done', '>=', sinceStr]
       ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 100 });
 
