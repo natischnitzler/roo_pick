@@ -3,7 +3,8 @@ const ODOO_DB = process.env.ODOO_DB;
 const ODOO_USER = process.env.ODOO_USER;
 const ODOO_PASS = process.env.ODOO_PASS;
 
-const CLIENTE_IDS = [52021, 52128];
+// IDs de direcciones de entrega usadas en los picks
+const CLIENTE_IDS = [53897, 53343]; // Roobosch, JMMA (direcciones de entrega)
 
 function rpc(service, method, params) {
   return new Promise((resolve, reject) => {
