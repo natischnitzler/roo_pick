@@ -3,293 +3,299 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Validador de Picks</title>
+<title>Despacho — Validador</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #F7F7F5;
+    --bg: #F4F4F2;
     --surface: #FFFFFF;
     --border: #E4E4E0;
-    --border-strong: #CBCBC5;
     --text: #1A1A18;
     --text-muted: #6B6B66;
-    --text-light: #9B9B95;
+    --text-light: #A0A09A;
     --accent: #2D5BE3;
-    --accent-light: #EEF2FD;
     --success: #1A7F4B;
     --success-light: #EDFAF3;
+    --warning-light: #FEF3E2;
+    --warning: #92400E;
     --danger: #C0392B;
     --danger-light: #FDECEA;
-    --warning: #B45309;
-    --warning-light: #FEF3E2;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --radius: 12px;
+    --radius-sm: 7px;
   }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-  .logo { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-  .last-update { font-size: 12px; color: var(--text-light); }
-  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
-  .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
-  .page-title { font-size: 22px; font-weight: 600; }
-  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-  .actions-bar { display: flex; gap: 8px; }
-  button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: inherit; }
-  button:hover { background: var(--bg); }
-  button:active { transform: scale(0.98); }
-  button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-  .btn-primary:hover { background: #2448C7; border-color: #2448C7; }
-  .btn-success { background: var(--success); color: white; border-color: var(--success); }
-  .btn-success:hover:not(:disabled) { background: #155F39; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
-  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-  .stat-value { font-size: 26px; font-weight: 600; }
-  .stat-value.accent { color: var(--accent); }
-  .client-section { margin-bottom: 1.5rem; }
-  .client-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border); }
-  .client-name { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .client-count { font-size: 12px; color: var(--text-light); }
-  .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 8px; transition: border-color 0.15s; }
-  .pick-card:hover { border-color: var(--border-strong); }
-  .pick-card.done { opacity: 0.5; background: var(--success-light); border-color: transparent; }
-  .pick-card.error { border-color: var(--danger); background: var(--danger-light); }
-  .pick-top { display: flex; align-items: center; gap: 1rem; }
-  .pick-info { flex: 1; min-width: 0; }
-  .pick-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-  .pick-meta { font-size: 12px; color: var(--text-muted); }
-  .pick-pending { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .pending-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; background: var(--warning-light); color: var(--warning); }
-  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
-  .badge-pending { background: var(--warning-light); color: var(--warning); }
-  .badge-done { background: var(--success-light); color: var(--success); }
-  .badge-error { background: var(--danger-light); color: var(--danger); }
-  .empty-state { text-align: center; padding: 4rem 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-  .empty-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--success-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
-  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .empty-sub { font-size: 13px; color: var(--text-muted); }
-  .loading { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 14px; }
-  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
-  .mini-spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
-  .mini-spinner.dark { border-color: var(--border); border-top-color: var(--accent); }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  main { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; gap: 1rem; flex-wrap: wrap; }
+  .top-bar h1 { font-size: 20px; font-weight: 600; }
+  .top-bar p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; transition: all 0.15s; }
+  .btn:hover { background: var(--bg); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-green { background: #16A34A; color: white; border-color: #16A34A; }
+  .btn-green:hover:not(:disabled) { background: #15803D; }
+
+  .stats { display: flex; gap: 10px; margin-bottom: 1.75rem; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 120px; }
+  .stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-val { font-size: 28px; font-weight: 700; color: var(--text); }
+  .stat-val.blue { color: var(--accent); }
+
+  .error-bar { background: var(--danger-light); border: 1px solid #F5C1BE; border-radius: var(--radius-sm); padding: 10px 14px; color: var(--danger); font-size: 13px; margin-bottom: 1rem; display: none; }
+
+  .client-block { margin-bottom: 2rem; }
+  .client-label { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+
+  /* Card principal — el pedido es el protagonista */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.15s, opacity 0.2s;
+  }
+  .card:hover { border-color: #C8C8C2; }
+  .card.done { opacity: 0.45; background: var(--success-light); border-color: transparent; pointer-events: none; }
+  .card.error { border-color: var(--danger); background: var(--danger-light); }
+
+  .card-left {}
+  .card-order { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; margin-bottom: 3px; }
+  .card-pick { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .card-pending { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--warning-light); color: var(--warning); }
+  .tag.done-tag { background: var(--success-light); color: var(--success); }
+
+  .card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .badge-count { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+
+  .empty { text-align: center; padding: 4rem 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .empty-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--success-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 20px; }
+  .empty h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .empty p { font-size: 13px; color: var(--text-muted); }
+
+  .loading { text-align: center; padding: 4rem; color: var(--text-muted); font-size: 14px; }
+  .spinner { width: 26px; height: 26px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+  .mini-spin { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.35); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  .mini-spin.dark { border-color: var(--border); border-top-color: var(--accent); }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .error-banner { background: var(--danger-light); border: 1px solid #F5C1BE; border-radius: var(--radius); padding: 1rem 1.25rem; color: var(--danger); font-size: 13px; margin-bottom: 1.5rem; display: none; }
-  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; display: none; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
-  @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } main { padding: 1rem; } header { padding: 0 1rem; } }
+
+  .prog { height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; display: none; }
+  .prog-fill { height: 100%; background: var(--accent); transition: width 0.3s; width: 0; }
+
+  @media (max-width: 540px) {
+    .card { grid-template-columns: 1fr; }
+    .card-right { justify-content: flex-end; }
+    main { padding: 1rem; }
+    header { padding: 0 1rem; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <div class="logo"><div class="logo-dot"></div>Validador de Despacho</div>
-  <div style="display:flex;align-items:center;gap:12px;">
-    <span class="last-update" id="last-update"></span>
-    <button onclick="cargarPicks()" id="btn-refresh">↻ Actualizar</button>
+  <div class="logo"><div class="dot"></div>Validador de Despacho</div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span style="font-size:12px;color:var(--text-light)" id="ts"></span>
+    <button class="btn" onclick="load()" id="btn-ref">↻ Actualizar</button>
   </div>
 </header>
 
 <main>
-  <div class="page-header">
+  <div class="top-bar">
     <div>
-      <div class="page-title">Picks realizados con pendientes</div>
-      <div class="page-subtitle">Inversiones Roobosch · Distribuidora JMMA</div>
+      <h1>Pedidos pendientes de entrega</h1>
+      <p>Roobosch · JMMA — últimos 10 días</p>
     </div>
-    <div class="actions-bar">
-      <button class="btn-success" onclick="validarTodos()" id="btn-all" disabled>✓ Validar todos</button>
-    </div>
+    <button class="btn btn-green" onclick="validateAll()" id="btn-all" disabled>✓ Validar todos</button>
   </div>
 
   <div class="stats">
-    <div class="stat-card"><div class="stat-label">Con pendientes</div><div class="stat-value accent" id="stat-total">—</div></div>
-    <div class="stat-card"><div class="stat-label">Roobosch</div><div class="stat-value" id="stat-roobosch">—</div></div>
-    <div class="stat-card"><div class="stat-label">JMMA</div><div class="stat-value" id="stat-jmma">—</div></div>
+    <div class="stat"><div class="stat-label">Con pendientes</div><div class="stat-val blue" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Roobosch</div><div class="stat-val" id="s-roob">—</div></div>
+    <div class="stat"><div class="stat-label">JMMA</div><div class="stat-val" id="s-jmma">—</div></div>
   </div>
 
-  <div class="error-banner" id="error-banner"></div>
-  <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="error-bar" id="err"></div>
+  <div class="prog" id="prog"><div class="prog-fill" id="prog-fill"></div></div>
   <div id="content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
 </main>
 
 <script>
 const API = '/api/odoo';
-let allPicks = [];
+let picks = [];
 
-async function cargarPicks() {
-  document.getElementById('btn-refresh').disabled = true;
+async function load() {
+  document.getElementById('btn-ref').disabled = true;
   document.getElementById('btn-all').disabled = true;
-  document.getElementById('error-banner').style.display = 'none';
-  document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando picks...</div>';
-  ['stat-total','stat-roobosch','stat-jmma'].forEach(id => document.getElementById(id).textContent = '—');
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando pedidos...</div>';
+  ['s-total','s-roob','s-jmma'].forEach(id => document.getElementById(id).textContent = '—');
 
   try {
-    const res = await fetch(API);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    allPicks = data.picks || [];
-    renderPicks();
-    document.getElementById('last-update').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+    const r = await fetch(API);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    picks = d.picks || [];
+    render();
+    document.getElementById('ts').textContent = new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
-    mostrarError('No se pudo conectar: ' + e.message);
+    showErr(e.message);
     document.getElementById('content').innerHTML = '';
   } finally {
-    document.getElementById('btn-refresh').disabled = false;
+    document.getElementById('btn-ref').disabled = false;
   }
 }
 
-function renderPicks() {
-  const roobosch = allPicks.filter(p => p.partner_id && p.partner_id[1] && p.partner_id[1].includes('ROOBOSCH'));
-  const jmma = allPicks.filter(p => p.partner_id && p.partner_id[1] && p.partner_id[1].includes('JMMA'));
+function render() {
+  const roob = picks.filter(p => p.partner_id?.[1]?.includes('ROOBOSCH'));
+  const jmma = picks.filter(p => p.partner_id?.[1]?.includes('JMMA'));
+  document.getElementById('s-total').textContent = picks.length;
+  document.getElementById('s-roob').textContent = roob.length;
+  document.getElementById('s-jmma').textContent = jmma.length;
+  document.getElementById('btn-all').disabled = picks.length === 0;
 
-  document.getElementById('stat-total').textContent = allPicks.length;
-  document.getElementById('stat-roobosch').textContent = roobosch.length;
-  document.getElementById('stat-jmma').textContent = jmma.length;
-  document.getElementById('btn-all').disabled = allPicks.length === 0;
-
-  if (!allPicks.length) {
+  if (!picks.length) {
     document.getElementById('content').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon"><svg style="width:22px;height:22px;stroke:#1A7F4B;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div class="empty-title">Todo al día</div>
-        <div class="empty-sub">No hay picks realizados con entregas pendientes</div>
+      <div class="empty">
+        <div class="empty-icon">✓</div>
+        <h2>Todo al día</h2>
+        <p>No hay pedidos con entregas pendientes</p>
       </div>`;
     return;
   }
 
   let html = '';
-  if (roobosch.length) html += seccionCliente('Inversiones Roobosch Limitada', roobosch);
-  if (jmma.length) html += seccionCliente('Distribuidora JMMA SPA', jmma);
+  if (roob.length) html += section('INVERSIONES ROOBOSCH LIMITADA', roob);
+  if (jmma.length) html += section('DISTRIBUIDORA JMMA SPA', jmma);
   document.getElementById('content').innerHTML = html;
 }
 
-function seccionCliente(nombre, picks) {
-  const cards = picks.map(p => {
-    const fecha = p.date_done ? p.date_done.split(' ')[0] : '—';
-    const gid = p.group_id ? p.group_id[0] : 0;
-    const pendingTags = (p.pending || []).map(pd =>
-      `<span class="pending-tag">⏳ ${pd.name}</span>`
-    ).join('');
-    return `
-      <div class="pick-card" id="card-${p.id}">
-        <div class="pick-top">
-          <div class="pick-info">
-            <div class="pick-name">${p.name} <span style="font-weight:400;color:var(--text-muted);font-size:12px;">— ${p.origin || ''}</span></div>
-            <div class="pick-meta">Realizado: ${fecha}</div>
-          </div>
-          <span class="badge badge-pending" id="badge-${p.id}">${(p.pending||[]).length} pendiente${(p.pending||[]).length!==1?'s':''}</span>
-          <button onclick="validarUno(${p.id}, ${gid}, this)" id="btn-${p.id}">✓ Validar</button>
-        </div>
-        <div class="pick-pending" id="pending-${p.id}">${pendingTags}</div>
-      </div>`;
-  }).join('');
-
-  return `<div class="client-section">
-    <div class="client-header">
-      <span class="client-name">${nombre}</span>
-      <span class="client-count">${picks.length} pick${picks.length!==1?'s':''}</span>
-    </div>${cards}</div>`;
+function section(name, items) {
+  return `<div class="client-block">
+    <div class="client-label">${name} · ${items.length} pedido${items.length!==1?'s':''}</div>
+    ${items.map(card).join('')}
+  </div>`;
 }
 
-async function validarUno(pickId, groupId, btn) {
-  btn.disabled = true;
-  btn.innerHTML = '<span class="mini-spinner dark"></span> Validando...';
-  try {
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'validate', groupId })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
+function card(p) {
+  const gid = p.group_id?.[0] || 0;
+  const tags = (p.pending||[]).map(pd => `<span class="tag">⏳ ${pd.name}</span>`).join('');
+  return `
+    <div class="card" id="card-${p.id}">
+      <div class="card-left">
+        <div class="card-order">${p.origin || p.name}</div>
+        <div class="card-pick">${p.name} · ${p.date_done?.split(' ')[0] || '—'}</div>
+        <div class="card-pending" id="pend-${p.id}">${tags}</div>
+      </div>
+      <div class="card-right">
+        <span class="badge-count" id="badge-${p.id}">${p.pending?.length||0} pendiente${p.pending?.length!==1?'s':''}</span>
+        <button class="btn" onclick="validateOne(${p.id},${gid},this)" id="btn-${p.id}">✓ Validar</button>
+      </div>
+    </div>`;
+}
 
-    const card = document.getElementById(`card-${pickId}`);
-    const badge = document.getElementById(`badge-${pickId}`);
-    const pendingDiv = document.getElementById(`pending-${pickId}`);
-    card.classList.add('done');
-    badge.className = 'badge badge-done';
-    badge.textContent = 'Completado';
-    pendingDiv.innerHTML = '';
-    btn.innerHTML = '✓ Listo';
-    btn.style.color = 'var(--success)';
-    allPicks = allPicks.filter(p => p.id !== pickId);
-    actualizarStats();
+async function validateOne(pid, gid, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<span class="mini-spin dark"></span>';
+  try {
+    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'validate', groupId: gid}) });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    markDone(pid);
+    picks = picks.filter(p => p.id !== pid);
+    updateStats();
   } catch(e) {
-    document.getElementById(`card-${pickId}`).classList.add('error');
-    document.getElementById(`badge-${pickId}`).className = 'badge badge-error';
-    document.getElementById(`badge-${pickId}`).textContent = 'Error';
+    document.getElementById(`card-${pid}`).classList.add('error');
     btn.disabled = false;
     btn.innerHTML = '↺ Reintentar';
-    mostrarError('Error: ' + e.message);
+    showErr(e.message);
   }
 }
 
-async function validarTodos() {
+async function validateAll() {
   const btnAll = document.getElementById('btn-all');
   btnAll.disabled = true;
-  btnAll.innerHTML = '<span class="mini-spinner"></span> Validando...';
-  document.getElementById('progress-bar').style.display = 'block';
-  document.getElementById('progress-fill').style.width = '0%';
+  btnAll.innerHTML = '<span class="mini-spin"></span> Validando...';
+  document.getElementById('prog').style.display = 'block';
 
-  const groupIds = allPicks.filter(p => p.group_id).map(p => p.group_id[0]);
+  const groupIds = picks.filter(p => p.group_id).map(p => p.group_id[0]);
   try {
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'validateAll', groupIds })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'validateAll', groupIds}) });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
 
-    data.results.forEach((r, i) => {
-      document.getElementById('progress-fill').style.width = Math.round(((i+1)/data.results.length)*100) + '%';
-      const pick = allPicks.find(p => p.group_id && p.group_id[0] === r.groupId);
+    d.results.forEach((res, i) => {
+      document.getElementById('prog-fill').style.width = Math.round(((i+1)/d.results.length)*100) + '%';
+      const pick = picks.find(p => p.group_id?.[0] === res.groupId);
       if (!pick) return;
-      const card = document.getElementById(`card-${pick.id}`);
-      const badge = document.getElementById(`badge-${pick.id}`);
-      if (r.ok) {
-        card && card.classList.add('done');
-        if (badge) { badge.className = 'badge badge-done'; badge.textContent = 'Completado'; }
-        const pendingDiv = document.getElementById(`pending-${pick.id}`);
-        if (pendingDiv) pendingDiv.innerHTML = '';
-      } else {
-        card && card.classList.add('error');
-        if (badge) { badge.className = 'badge badge-error'; badge.textContent = 'Error'; }
-        mostrarError('Error en ' + pick.name + ': ' + r.error);
-      }
+      if (res.ok) { markDone(pick.id); }
+      else { document.getElementById(`card-${pick.id}`)?.classList.add('error'); showErr(res.error); }
     });
 
-    allPicks = allPicks.filter(p => {
-      const r = data.results.find(x => p.group_id && x.groupId === p.group_id[0]);
+    picks = picks.filter(p => {
+      const r = d.results.find(x => x.groupId === p.group_id?.[0]);
       return r ? !r.ok : true;
     });
-    actualizarStats();
+    updateStats();
   } catch(e) {
-    mostrarError('Error al validar todos: ' + e.message);
+    showErr(e.message);
     btnAll.disabled = false;
     btnAll.innerHTML = '✓ Validar todos';
   } finally {
-    setTimeout(() => { document.getElementById('progress-bar').style.display = 'none'; }, 1500);
+    setTimeout(() => { document.getElementById('prog').style.display = 'none'; }, 1500);
   }
 }
 
-function actualizarStats() {
-  const roobosch = allPicks.filter(p => p.partner_id && p.partner_id[1] && p.partner_id[1].includes('ROOBOSCH'));
-  const jmma = allPicks.filter(p => p.partner_id && p.partner_id[1] && p.partner_id[1].includes('JMMA'));
-  document.getElementById('stat-total').textContent = allPicks.length;
-  document.getElementById('stat-roobosch').textContent = roobosch.length;
-  document.getElementById('stat-jmma').textContent = jmma.length;
-  if (!allPicks.length) document.getElementById('btn-all').disabled = true;
+function markDone(pid) {
+  const card = document.getElementById(`card-${pid}`);
+  if (card) {
+    card.classList.add('done');
+    const pend = document.getElementById(`pend-${pid}`);
+    if (pend) pend.innerHTML = '<span class="tag done-tag">✓ Completado</span>';
+    const badge = document.getElementById(`badge-${pid}`);
+    if (badge) badge.textContent = '';
+    const btn = document.getElementById(`btn-${pid}`);
+    if (btn) btn.innerHTML = '✓';
+  }
 }
 
-function mostrarError(msg) {
-  const b = document.getElementById('error-banner');
-  b.textContent = msg; b.style.display = 'block';
-  setTimeout(() => { b.style.display = 'none'; }, 7000);
+function updateStats() {
+  const roob = picks.filter(p => p.partner_id?.[1]?.includes('ROOBOSCH'));
+  const jmma = picks.filter(p => p.partner_id?.[1]?.includes('JMMA'));
+  document.getElementById('s-total').textContent = picks.length;
+  document.getElementById('s-roob').textContent = roob.length;
+  document.getElementById('s-jmma').textContent = jmma.length;
+  if (!picks.length) document.getElementById('btn-all').disabled = true;
 }
 
-cargarPicks();
-setInterval(cargarPicks, 60000);
+function showErr(msg) {
+  const e = document.getElementById('err');
+  e.textContent = msg; e.style.display = 'block';
+  setTimeout(() => e.style.display = 'none', 7000);
+}
+
+load();
+setInterval(load, 60000);
 </script>
 </body>
 </html>

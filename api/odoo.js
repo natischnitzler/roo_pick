@@ -56,17 +56,14 @@ module.exports = async (req, res) => {
       since.setDate(since.getDate() - 10);
       const sinceStr = since.toISOString().slice(0, 19).replace('T', ' ');
 
-      // Sin filtro de cliente — para ver qué devuelve
       const picks = await odoo(uid, 'stock.picking', 'search_read', [[
         ['picking_type_id.name', 'ilike', 'Pick'],
         ['state', '=', 'done'],
+        ['partner_id.name', 'in', CLIENTES],
         ['date_done', '>=', sinceStr]
-      ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 20 });
+      ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 100 });
 
-      // DEBUG: devolver los nombres de partner para ver el formato exacto
-      if (!picks.length) return res.json({ picks: [], debug: 'No picks in last 10 days' });
-
-      const partnerNames = [...new Set(picks.map(p => p.partner_id ? p.partner_id[1] : 'sin contacto'))];
+      if (!picks.length) return res.json({ picks: [] });
 
       const groupIds = [...new Set(picks.filter(p => p.group_id).map(p => p.group_id[0]))];
       const allPending = await odoo(uid, 'stock.picking', 'search_read', [[
@@ -87,7 +84,7 @@ module.exports = async (req, res) => {
         .filter(p => p.group_id && byGroup[p.group_id[0]]?.length)
         .map(p => ({ ...p, pending: byGroup[p.group_id[0]] }));
 
-      return res.json({ picks: result, debug_partners: partnerNames });
+      return res.json({ picks: result });
     }
 
     if (action === 'validate') {
