@@ -11,9 +11,14 @@ function rpc(service, method, params) {
     const xmlrpc = require('xmlrpc');
     const parsed = new URL(`${ODOO_URL}/xmlrpc/2/${service}`);
     const client = xmlrpc.createSecureClient({ host: parsed.hostname, port: 443, path: parsed.pathname });
-    // Serialize params replacing undefined/null with false to avoid marshal errors
-    const safeParams = JSON.parse(JSON.stringify(params, (k, v) => v === null || v === undefined ? false : v));
-    client.methodCall(method, safeParams, (err, val) => err ? reject(err) : resolve(val));
+    client.methodCall(method, params, (err, val) => {
+      if (err) {
+        // Ignorar error de allow_none — ocurre cuando button_validate devuelve None (éxito)
+        if (err.message && err.message.includes('allow_none')) return resolve(true);
+        return reject(err);
+      }
+      resolve(val);
+    });
   });
 }
 
@@ -28,26 +33,17 @@ async function validateGroup(uid, groupId) {
 
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
-    await odoo(uid, 'stock.picking', 'write', [[rid], { immediate_transfer: true }], {});
-    try {
-      await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
-        context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
-      });
-    } catch(e) {
-      if (!e.message.includes('allow_none')) throw e;
-    }
+    await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
+      context: { skip_immediate: true, skip_backorder: true }
+    });
     await new Promise(r => setTimeout(r, 1000));
   }
+  // Segunda pasada para entregas generadas al validar OUT
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
-    await odoo(uid, 'stock.picking', 'write', [[rid], { immediate_transfer: true }], {});
-    try {
-      await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
-        context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
-      });
-    } catch(e) {
-      if (!e.message.includes('allow_none')) throw e;
-    }
+    await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
+      context: { skip_immediate: true, skip_backorder: true }
+    });
   }
 }
 
@@ -79,6 +75,8 @@ module.exports = async (req, res) => {
       if (!picks.length) return res.json({ picks: [] });
 
       const groupIds = [...new Set(picks.filter(p => p.group_id).map(p => p.group_id[0]))];
+      if (!groupIds.length) return res.json({ picks: [] });
+
       const allPending = await odoo(uid, 'stock.picking', 'search_read', [[
         ['group_id', 'in', groupIds],
         ['state', 'not in', ['done', 'cancel']],
