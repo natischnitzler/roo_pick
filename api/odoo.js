@@ -34,43 +34,51 @@ function parseXmlRpc(txt) {
   const { DOMParser } = require('@xmldom/xmldom');
   const doc = new DOMParser().parseFromString(txt, 'text/xml');
 
+  const getText = (node) => (node && node.textContent ? node.textContent.trim() : '');
+
   const getValue = (node) => {
     if (!node) return null;
-    const child = node.children ? node.children[0] : null;
-    if (!child) return node.textContent ? node.textContent.trim() : null;
+    // Filter only element children (ignore text nodes)
+    const children = node.childNodes ? Array.from(node.childNodes).filter(n => n.nodeType === 1) : [];
+    const child = children[0];
+    if (!child) return getText(node);
     switch (child.tagName) {
-      case 'int': case 'i4': case 'i8': return parseInt(child.textContent);
-      case 'double': return parseFloat(child.textContent);
-      case 'boolean': return child.textContent.trim() === '1';
-      case 'string': return child.textContent;
+      case 'int': case 'i4': case 'i8': return parseInt(getText(child));
+      case 'double': return parseFloat(getText(child));
+      case 'boolean': return getText(child) === '1';
+      case 'string': return child.textContent || '';
       case 'nil': return null;
       case 'array': {
-        const data = child.querySelector('data');
-        return data ? Array.from(data.children).map(getValue) : [];
+        const dataNodes = Array.from(child.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'data');
+        const data = dataNodes[0];
+        if (!data) return [];
+        const valueNodes = Array.from(data.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'value');
+        return valueNodes.map(getValue);
       }
       case 'struct': {
         const obj = {};
-        child.querySelectorAll(':scope > member').forEach(m => {
-          const name = m.querySelector('name').textContent;
-          const val = m.querySelector('value');
-          obj[name] = getValue(val);
+        const memberNodes = Array.from(child.childNodes).filter(n => n.nodeType === 1 && n.tagName === 'member');
+        memberNodes.forEach(m => {
+          const nameNode = Array.from(m.childNodes).find(n => n.nodeType === 1 && n.tagName === 'name');
+          const valNode = Array.from(m.childNodes).find(n => n.nodeType === 1 && n.tagName === 'value');
+          if (nameNode && valNode) obj[getText(nameNode)] = getValue(valNode);
         });
         return obj;
       }
     }
-    return child.textContent;
+    return getText(child);
   };
 
   const fault = doc.getElementsByTagName('fault')[0];
   if (fault) {
-    const faultVal = fault.getElementsByTagName('value')[0];
+    const faultVal = Array.from(fault.getElementsByTagName('value'))[0];
     const parsed = getValue(faultVal);
     throw new Error(`Odoo fault: ${JSON.stringify(parsed)}`);
   }
-  const params = doc.getElementsByTagName('params')[0];
-  const param = params ? params.getElementsByTagName('param')[0] : null;
-  const value = param ? param.getElementsByTagName('value')[0] : null;
-  return getValue(value);
+  const paramsEl = doc.getElementsByTagName('params')[0];
+  const paramEl = paramsEl ? Array.from(paramsEl.getElementsByTagName('param'))[0] : null;
+  const valueEl = paramEl ? Array.from(paramEl.getElementsByTagName('value'))[0] : null;
+  return getValue(valueEl);
 }
 
 async function xmlrpc(service, method, params) {
