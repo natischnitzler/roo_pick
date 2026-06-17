@@ -110,8 +110,7 @@ module.exports = async (req, res) => {
       // 1. Buscar picks realizados de los clientes
       const pickIds = await callOdoo(uid, 'stock.picking', 'search', [[
         ['picking_type_id.name', 'ilike', 'Pick'],
-        ['state', '=', 'done'],
-        ['partner_id.name', 'in', CLIENTES]
+        ['state', '=', 'done']
       ]], { order: 'date_done desc', limit: 200 });
 
       if (!pickIds.length) return res.json({ picks: [] });
