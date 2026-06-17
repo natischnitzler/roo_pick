@@ -1,8 +1,7 @@
 {
   "name": "odoo-picks-validator",
   "version": "1.0.0",
-  "description": "Validador de Picks de Odoo",
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.10"
+    "xmlrpc": "^1.3.2"
   }
 }
