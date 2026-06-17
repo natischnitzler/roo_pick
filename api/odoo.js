@@ -3,8 +3,7 @@ const ODOO_DB = process.env.ODOO_DB;
 const ODOO_USER = process.env.ODOO_USER;
 const ODOO_PASS = process.env.ODOO_PASS;
 
-// IDs de direcciones de entrega usadas en los picks
-const CLIENTE_IDS = [53897, 53343]; // Roobosch, JMMA (direcciones de entrega)
+const CLIENTE_IDS = [53897, 53343]; // Roobosch, JMMA
 
 function rpc(service, method, params) {
   return new Promise((resolve, reject) => {
@@ -13,7 +12,6 @@ function rpc(service, method, params) {
     const client = xmlrpc.createSecureClient({ host: parsed.hostname, port: 443, path: parsed.pathname });
     client.methodCall(method, params, (err, val) => {
       if (err) {
-        // Ignorar error de allow_none — ocurre cuando button_validate devuelve None (éxito)
         if (err.message && err.message.includes('allow_none')) return resolve(true);
         return reject(err);
       }
@@ -38,7 +36,6 @@ async function validateGroup(uid, groupId) {
     });
     await new Promise(r => setTimeout(r, 1000));
   }
-  // Segunda pasada para entregas generadas al validar OUT
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
     await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
@@ -65,6 +62,7 @@ module.exports = async (req, res) => {
       since.setDate(since.getDate() - 10);
       const sinceStr = since.toISOString().slice(0, 19).replace('T', ' ');
 
+      // Picks realizados CON pendientes
       const picks = await odoo(uid, 'stock.picking', 'search_read', [[
         ['picking_type_id.name', 'ilike', 'Pick'],
         ['state', '=', 'done'],
@@ -72,30 +70,43 @@ module.exports = async (req, res) => {
         ['date_done', '>=', sinceStr]
       ]], { fields: ['name', 'partner_id', 'origin', 'date_done', 'group_id'], order: 'date_done desc', limit: 100 });
 
-      if (!picks.length) return res.json({ picks: [] });
-
       const groupIds = [...new Set(picks.filter(p => p.group_id).map(p => p.group_id[0]))];
-      if (!groupIds.length) return res.json({ picks: [] });
 
-      const allPending = await odoo(uid, 'stock.picking', 'search_read', [[
-        ['group_id', 'in', groupIds],
-        ['state', 'not in', ['done', 'cancel']],
-        ['picking_type_id.name', 'not ilike', 'Pick']
-      ]], { fields: ['name', 'state', 'group_id', 'picking_type_id'], limit: 500 });
+      let pending = [];
+      let history = [];
 
-      const byGroup = {};
-      for (const p of allPending) {
-        if (!p.group_id) continue;
-        const gid = p.group_id[0];
-        if (!byGroup[gid]) byGroup[gid] = [];
-        byGroup[gid].push(p);
+      if (groupIds.length) {
+        // Todos los traslados de esos grupos (no Pick)
+        const allTransfers = await odoo(uid, 'stock.picking', 'search_read', [[
+          ['group_id', 'in', groupIds],
+          ['picking_type_id.name', 'not ilike', 'Pick']
+        ]], { fields: ['name', 'state', 'group_id', 'picking_type_id', 'date_done'], limit: 500 });
+
+        const pendingByGroup = {};
+        const doneByGroup = {};
+
+        for (const t of allTransfers) {
+          if (!t.group_id) continue;
+          const gid = t.group_id[0];
+          if (t.state === 'done') {
+            if (!doneByGroup[gid]) doneByGroup[gid] = [];
+            doneByGroup[gid].push(t);
+          } else if (t.state !== 'cancel') {
+            if (!pendingByGroup[gid]) pendingByGroup[gid] = [];
+            pendingByGroup[gid].push(t);
+          }
+        }
+
+        pending = picks
+          .filter(p => p.group_id && pendingByGroup[p.group_id[0]]?.length)
+          .map(p => ({ ...p, pending: pendingByGroup[p.group_id[0]] }));
+
+        history = picks
+          .filter(p => p.group_id && doneByGroup[p.group_id[0]]?.length && !pendingByGroup[p.group_id[0]]?.length)
+          .map(p => ({ ...p, done: doneByGroup[p.group_id[0]] }));
       }
 
-      const result = picks
-        .filter(p => p.group_id && byGroup[p.group_id[0]]?.length)
-        .map(p => ({ ...p, pending: byGroup[p.group_id[0]] }));
-
-      return res.json({ picks: result });
+      return res.json({ picks: pending, history });
     }
 
     if (action === 'validate') {
