@@ -11,7 +11,9 @@ function rpc(service, method, params) {
     const xmlrpc = require('xmlrpc');
     const parsed = new URL(`${ODOO_URL}/xmlrpc/2/${service}`);
     const client = xmlrpc.createSecureClient({ host: parsed.hostname, port: 443, path: parsed.pathname });
-    client.methodCall(method, params, (err, val) => err ? reject(err) : resolve(val));
+    // Serialize params replacing undefined/null with false to avoid marshal errors
+    const safeParams = JSON.parse(JSON.stringify(params, (k, v) => v === null || v === undefined ? false : v));
+    client.methodCall(method, safeParams, (err, val) => err ? reject(err) : resolve(val));
   });
 }
 
@@ -26,16 +28,26 @@ async function validateGroup(uid, groupId) {
 
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
-    await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
-      context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
-    });
+    await odoo(uid, 'stock.picking', 'write', [[rid], { immediate_transfer: true }], {});
+    try {
+      await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
+        context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
+      });
+    } catch(e) {
+      if (!e.message.includes('allow_none')) throw e;
+    }
     await new Promise(r => setTimeout(r, 1000));
   }
   for (const rid of await find()) {
     await odoo(uid, 'stock.picking', 'action_assign', [[rid]], {});
-    await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
-      context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
-    });
+    await odoo(uid, 'stock.picking', 'write', [[rid], { immediate_transfer: true }], {});
+    try {
+      await odoo(uid, 'stock.picking', 'button_validate', [[rid]], {
+        context: { skip_immediate: true, skip_backorder: true, immediate_transfer: true }
+      });
+    } catch(e) {
+      if (!e.message.includes('allow_none')) throw e;
+    }
   }
 }
 
