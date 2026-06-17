@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Picks — Validador</title>
+<title>Validador de Picks</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
     --bg: #F7F7F5;
     --surface: #FFFFFF;
@@ -19,388 +18,98 @@
     --accent-light: #EEF2FD;
     --success: #1A7F4B;
     --success-light: #EDFAF3;
-    --warning: #B45309;
-    --warning-light: #FEF3E2;
     --danger: #C0392B;
     --danger-light: #FDECEA;
+    --warning: #B45309;
+    --warning-light: #FEF3E2;
     --radius: 10px;
     --radius-sm: 6px;
   }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .logo {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .logo-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .last-update {
-    font-size: 12px;
-    color: var(--text-light);
-  }
-
-  main {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-  }
-
-  .page-title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  .page-subtitle {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  .actions-bar {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  button {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    color: var(--text);
-    font-family: inherit;
-  }
-
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .last-update { font-size: 12px; color: var(--text-light); }
+  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+  .page-title { font-size: 22px; font-weight: 600; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .actions-bar { display: flex; gap: 8px; }
+  button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: inherit; }
   button:hover { background: var(--bg); }
   button:active { transform: scale(0.98); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
   .btn-primary:hover { background: #2448C7; border-color: #2448C7; }
-
-  .btn-success {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-  }
-  .btn-success:hover { background: #155F39; }
-
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-  }
-
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .stat-value {
-    font-size: 26px;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1;
-  }
-
+  .btn-success { background: var(--success); color: white; border-color: var(--success); }
+  .btn-success:hover:not(:disabled) { background: #155F39; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 600; }
   .stat-value.accent { color: var(--accent); }
-
   .client-section { margin-bottom: 1.5rem; }
-
-  .client-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .client-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .client-count {
-    font-size: 12px;
-    color: var(--text-light);
-  }
-
-  .pick-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 8px;
-    transition: border-color 0.15s;
-  }
-
+  .client-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .client-name { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .client-count { font-size: 12px; color: var(--text-light); }
+  .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 8px; transition: border-color 0.15s; }
   .pick-card:hover { border-color: var(--border-strong); }
-
-  .pick-card.done {
-    opacity: 0.5;
-    background: var(--success-light);
-    border-color: transparent;
-  }
-
-  .pick-card.error {
-    border-color: var(--danger);
-    background: var(--danger-light);
-  }
-
+  .pick-card.done { opacity: 0.5; background: var(--success-light); border-color: transparent; }
+  .pick-card.error { border-color: var(--danger); background: var(--danger-light); }
+  .pick-top { display: flex; align-items: center; gap: 1rem; }
   .pick-info { flex: 1; min-width: 0; }
-
-  .pick-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text);
-    margin-bottom: 2px;
-  }
-
-  .pick-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .badge-ready { background: var(--accent-light); color: var(--accent); }
+  .pick-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .pick-meta { font-size: 12px; color: var(--text-muted); }
+  .pick-pending { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .pending-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; background: var(--warning-light); color: var(--warning); }
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+  .badge-pending { background: var(--warning-light); color: var(--warning); }
   .badge-done { background: var(--success-light); color: var(--success); }
   .badge-error { background: var(--danger-light); color: var(--danger); }
-
-  .pick-actions { flex-shrink: 0; }
-
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-
-  .empty-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--success-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-  }
-
-  .empty-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
+  .empty-state { text-align: center; padding: 4rem 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .empty-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--success-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
   .empty-sub { font-size: 13px; color: var(--text-muted); }
-
-  .loading {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  .spinner {
-    width: 28px;
-    height: 28px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin: 0 auto 1rem;
-  }
-
+  .loading { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
+  .mini-spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  .mini-spinner.dark { border-color: var(--border); border-top-color: var(--accent); }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-banner {
-    background: var(--danger-light);
-    border: 1px solid #F5C1BE;
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    color: var(--danger);
-    font-size: 13px;
-    margin-bottom: 1.5rem;
-    display: none;
-  }
-
-  .progress-bar {
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    display: none;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    transition: width 0.3s;
-    width: 0%;
-  }
-
-  svg.icon {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    .page-header { flex-direction: column; align-items: flex-start; }
-    main { padding: 1rem; }
-    header { padding: 0 1rem; }
-  }
+  .error-banner { background: var(--danger-light); border: 1px solid #F5C1BE; border-radius: var(--radius); padding: 1rem 1.25rem; color: var(--danger); font-size: 13px; margin-bottom: 1.5rem; display: none; }
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; display: none; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
+  @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } main { padding: 1rem; } header { padding: 0 1rem; } }
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    Validador de Picks
-  </div>
-  <div class="header-right">
+  <div class="logo"><div class="logo-dot"></div>Validador de Despacho</div>
+  <div style="display:flex;align-items:center;gap:12px;">
     <span class="last-update" id="last-update"></span>
-    <button onclick="cargarPicks()" id="btn-refresh">
-      <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Actualizar
-    </button>
+    <button onclick="cargarPicks()" id="btn-refresh">↻ Actualizar</button>
   </div>
 </header>
 
 <main>
   <div class="page-header">
     <div>
-      <div class="page-title">Picks listos para despachar</div>
+      <div class="page-title">Picks realizados con pendientes</div>
       <div class="page-subtitle">Inversiones Roobosch · Distribuidora JMMA</div>
     </div>
     <div class="actions-bar">
-      <button class="btn-success" onclick="validarTodos()" id="btn-all" disabled>
-        <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        Validar todos
-      </button>
+      <button class="btn-success" onclick="validarTodos()" id="btn-all" disabled>✓ Validar todos</button>
     </div>
   </div>
 
   <div class="stats">
-    <div class="stat-card">
-      <div class="stat-label">Picks listos</div>
-      <div class="stat-value accent" id="stat-total">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Roobosch</div>
-      <div class="stat-value" id="stat-roobosch">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">JMMA</div>
-      <div class="stat-value" id="stat-jmma">—</div>
-    </div>
+    <div class="stat-card"><div class="stat-label">Con pendientes</div><div class="stat-value accent" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Roobosch</div><div class="stat-value" id="stat-roobosch">—</div></div>
+    <div class="stat-card"><div class="stat-label">JMMA</div><div class="stat-value" id="stat-jmma">—</div></div>
   </div>
 
   <div class="error-banner" id="error-banner"></div>
   <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-
-  <div id="content">
-    <div class="loading">
-      <div class="spinner"></div>
-      Cargando picks...
-    </div>
-  </div>
+  <div id="content"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
 </main>
 
 <script>
@@ -408,14 +117,11 @@ const API = '/api/odoo';
 let allPicks = [];
 
 async function cargarPicks() {
-  const btn = document.getElementById('btn-refresh');
-  btn.disabled = true;
+  document.getElementById('btn-refresh').disabled = true;
   document.getElementById('btn-all').disabled = true;
   document.getElementById('error-banner').style.display = 'none';
-  document.getElementById('content').innerHTML = `<div class="loading"><div class="spinner"></div>Cargando picks...</div>`;
-  document.getElementById('stat-total').textContent = '—';
-  document.getElementById('stat-roobosch').textContent = '—';
-  document.getElementById('stat-jmma').textContent = '—';
+  document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div>Cargando picks...</div>';
+  ['stat-total','stat-roobosch','stat-jmma'].forEach(id => document.getElementById(id).textContent = '—');
 
   try {
     const res = await fetch(API);
@@ -423,12 +129,12 @@ async function cargarPicks() {
     if (data.error) throw new Error(data.error);
     allPicks = data.picks || [];
     renderPicks();
-    document.getElementById('last-update').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('last-update').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
   } catch(e) {
-    mostrarError('No se pudo conectar con Odoo: ' + e.message);
+    mostrarError('No se pudo conectar: ' + e.message);
     document.getElementById('content').innerHTML = '';
   } finally {
-    btn.disabled = false;
+    document.getElementById('btn-refresh').disabled = false;
   }
 }
 
@@ -439,20 +145,17 @@ function renderPicks() {
   document.getElementById('stat-total').textContent = allPicks.length;
   document.getElementById('stat-roobosch').textContent = roobosch.length;
   document.getElementById('stat-jmma').textContent = jmma.length;
+  document.getElementById('btn-all').disabled = allPicks.length === 0;
 
   if (!allPicks.length) {
     document.getElementById('content').innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">
-          <svg style="width:22px;height:22px;stroke:#1A7F4B;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
+        <div class="empty-icon"><svg style="width:22px;height:22px;stroke:#1A7F4B;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
         <div class="empty-title">Todo al día</div>
-        <div class="empty-sub">No hay picks pendientes de validar</div>
+        <div class="empty-sub">No hay picks realizados con entregas pendientes</div>
       </div>`;
     return;
   }
-
-  document.getElementById('btn-all').disabled = false;
 
   let html = '';
   if (roobosch.length) html += seccionCliente('Inversiones Roobosch Limitada', roobosch);
@@ -462,114 +165,111 @@ function renderPicks() {
 
 function seccionCliente(nombre, picks) {
   const cards = picks.map(p => {
-    const fecha = p.scheduled_date ? p.scheduled_date.split(' ')[0] : '—';
+    const fecha = p.date_done ? p.date_done.split(' ')[0] : '—';
     const gid = p.group_id ? p.group_id[0] : 0;
+    const pendingTags = (p.pending || []).map(pd =>
+      `<span class="pending-tag">⏳ ${pd.name}</span>`
+    ).join('');
     return `
       <div class="pick-card" id="card-${p.id}">
-        <div class="pick-info">
-          <div class="pick-name">${p.name}</div>
-          <div class="pick-meta">Pedido: ${p.origin || '—'} · Fecha: ${fecha}</div>
+        <div class="pick-top">
+          <div class="pick-info">
+            <div class="pick-name">${p.name} <span style="font-weight:400;color:var(--text-muted);font-size:12px;">— ${p.origin || ''}</span></div>
+            <div class="pick-meta">Realizado: ${fecha}</div>
+          </div>
+          <span class="badge badge-pending" id="badge-${p.id}">${(p.pending||[]).length} pendiente${(p.pending||[]).length!==1?'s':''}</span>
+          <button onclick="validarUno(${p.id}, ${gid}, this)" id="btn-${p.id}">✓ Validar</button>
         </div>
-        <span class="badge badge-ready" id="badge-${p.id}">Listo</span>
-        <div class="pick-actions">
-          <button onclick="validarUno(${p.id}, ${gid}, this)" id="btn-${p.id}">
-            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Validar
-          </button>
-        </div>
+        <div class="pick-pending" id="pending-${p.id}">${pendingTags}</div>
       </div>`;
   }).join('');
 
-  return `
-    <div class="client-section">
-      <div class="client-header">
-        <span class="client-name">${nombre}</span>
-        <span class="client-count">${picks.length} pick${picks.length !== 1 ? 's' : ''}</span>
-      </div>
-      ${cards}
-    </div>`;
+  return `<div class="client-section">
+    <div class="client-header">
+      <span class="client-name">${nombre}</span>
+      <span class="client-count">${picks.length} pick${picks.length!==1?'s':''}</span>
+    </div>${cards}</div>`;
 }
 
 async function validarUno(pickId, groupId, btn) {
   btn.disabled = true;
-  btn.innerHTML = `<div style="width:12px;height:12px;border:2px solid #ccc;border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;"></div> Validando...`;
-  const badge = document.getElementById(`badge-${pickId}`);
-  const card = document.getElementById(`card-${pickId}`);
-
+  btn.innerHTML = '<span class="mini-spinner dark"></span> Validando...';
   try {
     const res = await fetch(API, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'validate', pickId, groupId })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'validate', groupId })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
+    const card = document.getElementById(`card-${pickId}`);
+    const badge = document.getElementById(`badge-${pickId}`);
+    const pendingDiv = document.getElementById(`pending-${pickId}`);
     card.classList.add('done');
     badge.className = 'badge badge-done';
     badge.textContent = 'Completado';
-    btn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Listo`;
+    pendingDiv.innerHTML = '';
+    btn.innerHTML = '✓ Listo';
     btn.style.color = 'var(--success)';
-
     allPicks = allPicks.filter(p => p.id !== pickId);
     actualizarStats();
   } catch(e) {
-    card.classList.add('error');
-    badge.className = 'badge badge-error';
-    badge.textContent = 'Error';
+    document.getElementById(`card-${pickId}`).classList.add('error');
+    document.getElementById(`badge-${pickId}`).className = 'badge badge-error';
+    document.getElementById(`badge-${pickId}`).textContent = 'Error';
     btn.disabled = false;
-    btn.innerHTML = 'Reintentar';
-    mostrarError('Error al validar ' + pickId + ': ' + e.message);
+    btn.innerHTML = '↺ Reintentar';
+    mostrarError('Error: ' + e.message);
   }
 }
 
 async function validarTodos() {
   const btnAll = document.getElementById('btn-all');
   btnAll.disabled = true;
-  btnAll.innerHTML = `<div style="width:12px;height:12px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;"></div> Validando...`;
+  btnAll.innerHTML = '<span class="mini-spinner"></span> Validando...';
+  document.getElementById('progress-bar').style.display = 'block';
+  document.getElementById('progress-fill').style.width = '0%';
 
-  const progressBar = document.getElementById('progress-bar');
-  const progressFill = document.getElementById('progress-fill');
-  progressBar.style.display = 'block';
-  progressFill.style.width = '0%';
-
-  const pickIds = allPicks.map(p => ({ id: p.id, groupId: p.group_id ? p.group_id[0] : 0 }));
-  let completados = 0;
-
+  const groupIds = allPicks.filter(p => p.group_id).map(p => p.group_id[0]);
   try {
     const res = await fetch(API, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'validateAll', pickIds })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'validateAll', groupIds })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    for (const r of data.results) {
-      completados++;
-      progressFill.style.width = Math.round((completados / pickIds.length) * 100) + '%';
-      const card = document.getElementById(`card-${r.id}`);
-      const badge = document.getElementById(`badge-${r.id}`);
-      const btn = document.getElementById(`btn-${r.id}`);
+    data.results.forEach((r, i) => {
+      document.getElementById('progress-fill').style.width = Math.round(((i+1)/data.results.length)*100) + '%';
+      const pick = allPicks.find(p => p.group_id && p.group_id[0] === r.groupId);
+      if (!pick) return;
+      const card = document.getElementById(`card-${pick.id}`);
+      const badge = document.getElementById(`badge-${pick.id}`);
       if (r.ok) {
         card && card.classList.add('done');
         if (badge) { badge.className = 'badge badge-done'; badge.textContent = 'Completado'; }
-        if (btn) { btn.innerHTML = '✓ Listo'; btn.style.color = 'var(--success)'; }
+        const pendingDiv = document.getElementById(`pending-${pick.id}`);
+        if (pendingDiv) pendingDiv.innerHTML = '';
       } else {
         card && card.classList.add('error');
         if (badge) { badge.className = 'badge badge-error'; badge.textContent = 'Error'; }
-        mostrarError('Error en ' + r.id + ': ' + r.error);
+        mostrarError('Error en ' + pick.name + ': ' + r.error);
       }
-    }
+    });
 
-    allPicks = allPicks.filter(p => !data.results.find(r => r.id === p.id && r.ok));
+    allPicks = allPicks.filter(p => {
+      const r = data.results.find(x => p.group_id && x.groupId === p.group_id[0]);
+      return r ? !r.ok : true;
+    });
     actualizarStats();
   } catch(e) {
     mostrarError('Error al validar todos: ' + e.message);
     btnAll.disabled = false;
-    btnAll.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Validar todos`;
+    btnAll.innerHTML = '✓ Validar todos';
   } finally {
-    setTimeout(() => { progressBar.style.display = 'none'; }, 1500);
+    setTimeout(() => { document.getElementById('progress-bar').style.display = 'none'; }, 1500);
   }
 }
 
@@ -583,10 +283,9 @@ function actualizarStats() {
 }
 
 function mostrarError(msg) {
-  const banner = document.getElementById('error-banner');
-  banner.textContent = msg;
-  banner.style.display = 'block';
-  setTimeout(() => { banner.style.display = 'none'; }, 6000);
+  const b = document.getElementById('error-banner');
+  b.textContent = msg; b.style.display = 'block';
+  setTimeout(() => { b.style.display = 'none'; }, 7000);
 }
 
 cargarPicks();
